@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IBI Product Price Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f3f4f6; --surface: #ffffff; --text: #111827; --text-muted: #6b7280;
+            --border: #e5e7eb; --primary: #4f46e5; --primary-hover: #4338ca;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+        }
+        [data-theme="dark"] {
+            --bg: #111827; --surface: #1f2937; --text: #f9fafb; --text-muted: #9ca3af;
+            --border: #374151; --primary: #6366f1; --primary-hover: #818cf8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; min-height: 100vh; transition: 0.3s; }
+        
+        .container { width: 100%; max-width: 600px; margin-top: 20px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header h1 { font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .theme-toggle { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.875rem; font-weight: 600; }
+        
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 24px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        
+        .image-upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 30px 20px; text-align: center; cursor: pointer; background: var(--bg); transition: 0.2s; position: relative; overflow: hidden; }
+        .image-upload-area:hover, .image-upload-area.dragover { border-color: var(--primary); background: rgba(79, 70, 229, 0.05); }
+        .image-upload-area p { font-size: 0.9rem; font-weight: 500; color: var(--text-muted); margin-top: 10px; }
+        .image-upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; background: var(--surface); display: none; }
+        
+        .btn-search { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-search:hover { background: var(--primary-hover); }
+        .btn-search:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        .results-card { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-top: 4px solid var(--success); }
+        .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+        .price-box { background: var(--bg); padding: 16px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
+        .price-box h3 { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+        .price-box .amount { font-size: 1.8rem; font-weight: 700; color: var(--text); }
+        .price-box.min .amount { color: var(--success); }
+        .price-box.max .amount { color: var(--danger); }
+        
+        .analysis-box { margin-top: 20px; padding: 16px; background: rgba(79, 70, 229, 0.05); border-radius: 12px; border-left: 4px solid var(--primary); font-size: 0.9rem; line-height: 1.5; color: var(--text); }
+        
+        /* Spinner */
+        .spinner { display: none; width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body data-theme="light">
+
+    <div class="container">
+        <div class="header">
+            <h1>🔍 IBI Price Search</h1>
+            <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+        </div>
+
+        <div class="card">
+            <div class="form-group">
+                <label>1. Product Image</label>
+                <div class="image-upload-area" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary)"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    <p>Tap to upload or drag & drop image</p>
+                    <img id="imagePreview" src="" alt="Preview">
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleImage(this)">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>2. Product Name</label>
+                <input type="text" id="productName" placeholder="e.g., Coconut Broomstick, Polo T-Shirt" required>
+            </div>
+
+            <div class="form-group">
+                <label>3. Quantity</label>
+                <input type="number" id="quantity" value="1" min="1" required>
+            </div>
+
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px; text-align: center;">
+                * Assuming Free Delivery (Borne by Seller)
+            </p>
+
+            <button class="btn-search" id="searchBtn" onclick="searchPrices()">
+                <span id="btnText">Scan Market Prices</span>
+                <div class="spinner" id="spinner"></div>
+            </button>
+        </div>
+
+        <div class="results-card" id="resultsCard">
+            <h2 style="font-size: 1.2rem; text-align: center; color: var(--primary);">Market Estimate (INR)</h2>
+            
+            <div class="price-grid">
+                <div class="price-box min">
+                    <h3>Minimum Price</h3>
+                    <div class="amount" id="resMin">₹0</div>
+                </div>
+                <div class="price-box max">
+                    <h3>Maximum Price</h3>
+                    <div class="amount" id="resMax">₹0</div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 15px; font-weight: 600;">
+                Avg Market Price: <span id="resAvg" style="color: var(--primary);">₹0</span>
+            </div>
+
+            <div class="analysis-box">
+                <strong>💡 Market Analysis:</strong> <span id="resAnalysis">Analyzing...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Theme Setup ---
+        const currentTheme = localStorage.getItem('ibi_price_theme') || 'light';
+        if (currentTheme === 'dark') { document.body.setAttribute('data-theme', 'dark'); document.getElementById('themeBtn').innerText = '☀️ Light'; }
+        function toggleTheme() {
+            if (document.body.getAttribute('data-theme') === 'dark') { document.body.setAttribute('data-theme', 'light'); localStorage.setItem('ibi_price_theme', 'light'); document.getElementById('themeBtn').innerText = '🌙 Dark'; } 
+            else { document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('ibi_price_theme', 'dark'); document.getElementById('themeBtn').innerText = '☀️ Light'; }
+        }
+
+        // --- Image Handling ---
+        let base64ImageString = "";
+        function handleImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgPreview = document.getElementById('imagePreview');
+                    imgPreview.src = e.target.result;
+                    imgPreview.style.display = 'block';
+                    // Extract just the base64 data, remove the MIME type prefix
+                    base64ImageString = e.target.result.split(',')[1];
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // --- Drag and Drop ---
+        const dropzone = document.getElementById('dropzone');
+        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault(); dropzone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                document.getElementById('fileInput').files = e.dataTransfer.files;
+                handleImage(document.getElementById('fileInput'));
+            }
+        });
+
+        // ⚠️ PASTE YOUR NEW GOOGLE APPS SCRIPT WEB APP URL HERE:
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcAZpTfmLazXnq_nizyXAQKdYCxp8Pf4QVoW17d8SmWK7xmQM0yqjOXIcU6-9ulpNmSg/exec";
+
+        function searchPrices() {
+            const productName = document.getElementById('productName').value.trim();
+            const quantity = document.getElementById('quantity').value;
+            
+            if (!productName || !base64ImageString) {
+                alert("Please provide both a Product Name and an Image.");
+                return;
+            }
+
+            // UI Loading State
+            const btn = document.getElementById('searchBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('spinner');
+            const resultsCard = document.getElementById('resultsCard');
+            
+            btn.disabled = true;
+            btnText.innerText = "Scanning Marketpaces...";
+            spinner.style.display = "block";
+            resultsCard.style.display = "none";
+
+            const payload = {
+                productName: productName,
+                quantity: quantity,
+                image: base64ImageString
+            };
+
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(payload),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.disabled = false;
+                btnText.innerText = "Scan Market Prices";
+                spinner.style.display = "none";
+
+                if (data.status === "success") {
+                    const result = data.data;
+                    document.getElementById('resMin').innerText = "₹" + result.minPrice;
+                    document.getElementById('resMax').innerText = "₹" + result.maxPrice;
+                    document.getElementById('resAvg').innerText = "₹" + result.averagePrice;
+                    document.getElementById('resAnalysis').innerText = result.analysis;
+                    resultsCard.style.display = "block";
+                    resultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    alert("Error: " + data.message);
+                }
+            })
+            .catch(error => {
+                btn.disabled = false;
+                btnText.innerText = "Scan Market Prices";
+                spinner.style.display = "none";
+                alert("Network error. Please try again.");
+                console.error(error);
+            });
+        }
+    </script>
+</body>
+</html>
