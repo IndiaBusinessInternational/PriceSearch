@@ -136,7 +136,6 @@
                     const imgPreview = document.getElementById('imagePreview');
                     imgPreview.src = e.target.result;
                     imgPreview.style.display = 'block';
-                    // Extract just the base64 data, remove the MIME type prefix
                     base64ImageString = e.target.result.split(',')[1];
                 };
                 reader.readAsDataURL(input.files[0]);
@@ -155,7 +154,7 @@
             }
         });
 
-        // ⚠️ PASTE YOUR NEW GOOGLE APPS SCRIPT WEB APP URL HERE:
+        // ✅ YOUR NEW GOOGLE APPS SCRIPT WEB APP URL IS HERE:
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUs1kWzid6bV1pdXQ8NueETPSrjG5_nCOKaAVUnKIWjri4UcSqvh4K6ztgZS9BGQ0yZw/exec";
 
         function searchPrices() {
@@ -204,14 +203,14 @@
                     resultsCard.style.display = "block";
                     resultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
-                    alert("Error: " + data.message);
+                    alert("Error: " + data.message + "\n\n(Did you remember to deploy as a 'New version'?)");
                 }
             })
             .catch(error => {
                 btn.disabled = false;
                 btnText.innerText = "Scan Market Prices";
                 spinner.style.display = "none";
-                alert("Network error. Please try again.");
+                alert("Network error. Please check your internet connection.");
                 console.error(error);
             });
         }
