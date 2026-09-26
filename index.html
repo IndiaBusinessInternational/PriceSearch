@@ -2,6 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+<!-- IBI-PWA-KIT: installable app (manifest + icons + service worker) -->
+<link rel="manifest" href="manifest.json" crossorigin="use-credentials">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="IBI Price">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<script>if('serviceWorker' in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>IBI Price Search | India Business International</title>
     <meta name="description" content="Find minimum, maximum and average market prices for any product.">
@@ -69,9 +78,11 @@
         /* Spinner */
         .spinner { display: none; width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .app-version-badge { position: absolute; top: 6px; left: 8px; font-size: 12px; font-weight: 600; color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1px 8px; }
     </style>
 </head>
 <body data-theme="light">
+    <span class="app-version-badge">v1.1</span>
 
     <div class="container">
         <div class="header">
