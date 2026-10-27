@@ -81,15 +81,34 @@
         .spinner { display: none; width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .app-version-badge { position: absolute; top: 6px; left: 8px; font-size: 12px; font-weight: 600; color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1px 8px; }
+        /* v1.3 edge to edge on every screen size (Founder 27 Oct 2026: "make all the apps edge to edge on laptop too").
+           No centred 600px column and no 20px page gutter on phones: full-width top bar, full-bleed cards (no side border,
+           radius or shadow) with 10px inner side padding, page never wider than the screen (clip, not hidden).
+           From 1000px the form sits on the left and the market estimate on the right. Spacing only, no font sizes. */
+        html, body { overflow-x: clip; }
+        body { padding: 0; display: block; }
+        .container { max-width: none; margin: 0; }
+        .header { padding: 10px; margin-bottom: 8px; gap: 8px; background: var(--surface); border-bottom: 1px solid var(--border); }
+        .header h1 { display: block; flex: 1 1 auto; min-width: 0; line-height: 1.25; }
+        .header .app-version-badge { position: static; display: inline-block; vertical-align: middle; margin-left: 4px; }
+        .theme-toggle { white-space: nowrap; flex-shrink: 0; }
+        .card, .results-card { border-radius: 0; border-left: 0; border-right: 0; box-shadow: none; padding: 16px 10px; margin-bottom: 8px; overflow-wrap: break-word; }
+        .results-empty { display: none; }
+        button, input, select, [role="button"] { overflow-wrap: normal; }
+        @media (min-width: 1000px) {
+            .container { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 8px; align-items: start; }
+            .container > .header { grid-column: 1 / -1; }
+            .container > .results-card, .container > .results-empty { grid-column: 2; grid-row: 2; }
+            .results-empty { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 240px; color: var(--text-muted); font-size: 1rem; line-height: 1.6; }
+            .results-empty[hidden] { display: none; }
+        }
     </style>
 <script src="ibi-share.js" defer data-slot=".header"></script>
 </head>
 <body data-theme="light">
-    <span class="app-version-badge">v1.2</span>
-
     <div class="container">
         <div class="header">
-            <h1>🔍 IBI Price Search</h1>
+            <h1>🔍 IBI Price Search <span class="app-version-badge">v1.3</span></h1>
             <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
         </div>
 
@@ -146,6 +165,7 @@
                 <strong>💡 Market Analysis:</strong> <span id="resAnalysis">Analyzing...</span>
             </div>
         </div>
+        <div class="card results-empty" id="resultsEmpty">Your market estimate (minimum, maximum and average price) appears here after you scan.</div>
     </div>
 
     <script>
@@ -206,6 +226,7 @@
             btnText.innerText = "Scanning Marketplaces...";
             spinner.style.display = "block";
             resultsCard.style.display = "none";
+            document.getElementById('resultsEmpty').hidden = false;
 
             const payload = {
                 productName: productName,
@@ -231,6 +252,7 @@
                     document.getElementById('resAvg').innerText = "₹" + result.averagePrice;
                     document.getElementById('resAnalysis').innerText = result.analysis;
                     resultsCard.style.display = "block";
+                    document.getElementById('resultsEmpty').hidden = true;
                     resultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
                     alert("Error: " + data.message + "\n\n(Did you remember to deploy as a 'New version'?)");
